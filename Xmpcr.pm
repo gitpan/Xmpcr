@@ -1,6 +1,6 @@
 package Audio::Xmpcr;
 
-$VERSION="0.02";
+$VERSION="1.00";
 
 use strict;
 use Audio::Xmpcr::Serial;

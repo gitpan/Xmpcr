@@ -18,10 +18,11 @@
 #
 #                This program writes all songs to $spooldir
 #
-#                Unfortunately, we can't use the API - there's currently no
-#                asynchronous channel update mode. We need to use the 
-#                select call with the daemon to find out when the channel 
-#                data has been retrieved and is ready for processing.
+#                Unfortunately, we can't use the client API - there's 
+#                currently no asynchronous channel update mode. We need 
+#                to use the select call with the daemon to find out when 
+#                the channel data has been retrieved and is ready for 
+#                processing.
 #
 #                This application is subject to the same copyright as the
 #                Audio::Xmpcr module.
@@ -39,7 +40,7 @@ use Audio::DSP;
 use Audio::Wav;
 use IO::Socket::INET;
 use Fcntl;
-die "usage: $0 station[,station...] substring [substring...]\n" 
+die "usage: $0 station[,station...] substring[,substring...]\n" 
 													if scalar(@ARGV)!=2;
 my @stations=split(",",$ARGV[0]);
 my @substrings=split(",",$ARGV[1]);
@@ -115,6 +116,7 @@ while(1) {
 		$newfn =~ s/ /_/g;                   # chuck all spaces
 		1 while $newfn =~ s/__/_/g;          # double spaces to single
 		$newfn =~ s/^_+//;                   # toss leading underscores
+		$newfn .= "_" . time();
 	
 		my $ok=1;
 		map {

@@ -13,13 +13,28 @@ for more information.
 
 This package is a rewrite and extension of Chris Carlson's original work. 
 Much appreciation goes to him for publishing the protocol (which he 
-discovered from someone else).
+in turn discovered from someone else; thanks also to whoever that is!).
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+                       ******    WARNING    ********
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Please note that a bug has been found in Audio::DSP 0.02, which causes
+extreme memory leaks and can halt your operating system when free memory
+is exhausted. The author has been notified, but a fixed package is not 
+available of this writing. If you need to use 0.02,  you'll need to fix 
+the bug yourself.  Replace line 594 of DSP.xs, by adding a call to sv_2mortal.
+Line 594 should now look like:
+
+        XPUSHs(sv_2mortal(newSVpvn(buf, status)));
+
+There are other changes required, but they won't impact Audio::Xmpcr.
+
 
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
  Building
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-To build it, make sure you have Device::SerialPort loaded. 
-Unpack the module, and type :
+To build it, make sure you have Device::SerialPort, Audio::Wav, and
+Audio::DSP loaded.  Unpack the module, and type :
 
 	perl Makefile.PL
 	make install
@@ -54,9 +69,10 @@ daemon's source (there's a configuration section at the top).
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
  Setting up the web interface (if you elect to use it)
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-Likewise, to use the web interface, copy the web/.cgi file to a convenient
-place in your web directory, and edit the configuration section at the
-top of the .cgi to point to the location of the templates.
+Likewise, to use the web interface, copy the web/index.cgi file 
+(and templates) to a convenient place in your web directory, and 
+edit the configuration section at the top of the .cgi to point to the 
+location of the templates.
 
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 Included applications:
