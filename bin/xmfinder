@@ -2,7 +2,7 @@
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 #     xmfinder - A program to search channels for substrings that interest
-#                you. Hook up PCR has for xmripper. Also, you may run
+#                you. Hook up PCR as for xmripper. Also, you may run
 #                bladeenc (or other encoder) as in xmripper.
 #
 #                Pass in a comma-separated list of channels you want 
@@ -65,7 +65,7 @@ my $radio=new IO::Socket::INET(PeerAddr => "$nethost:$netport")
 										or die "Can't contact xmpcr daemon: $!";
 my $rin=""; vec($rin,fileno($radio),1)=1;
 print "Setting locker name...\n"; 
-print $radio "appname ripper\n"; my($res)=readstr();
+print $radio "appname finder\n"; my($res)=readstr();
 die "Can't set locker name: (result '$res')\n" unless $res and $res eq "Ready";
 print $radio "on\n"; ($res)=readstr();
 die "Can't turn power on: (result '$res')\n" unless $res and $res eq "Ready";

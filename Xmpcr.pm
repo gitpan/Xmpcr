@@ -1,6 +1,6 @@
 package Audio::Xmpcr;
 
-$VERSION="1.01";
+$VERSION="1.02";
 
 use strict;
 use Audio::Xmpcr::Serial;
@@ -47,6 +47,10 @@ not desirable because polling the device for song data is time consuming.
 Time required to pull an entire channel/song/artist listing is upwards
 of 10-20 seconds. Also, the device may be shared by several users/programs.
 Protocol confusion may result if everyone is talking at the same time.
+Note that the serial mode will write a channel cache file into 
+~/.xmpcrd-cache, so if the channel list changes, you'll need to delete
+this file and restart the program. (i.e., since the daemon uses serial
+mode, you'll need to restart the daemon)
 
 The second mode of operation is NETWORK/DAEMON mode. Here, a daemon
 runs on the machine connected to the Pcr, and all communication with the
@@ -58,7 +62,8 @@ Also, every half second, the current channel is updated - since we always
 want to know when the channel data changes on the current channel. This
 means that it takes 100/4 or 25 seconds to refresh all channels. When
 retrieving a channel/song listing, a few channels may be out of date, 
-but will most certainly be correct the next pass through. 
+but will most certainly be correct the next pass through.  See the note
+about the cache file in the SERIAL mode paragraph, above.
 
 The mode is chosen when the device is instantiated - i.e., the constructor
 is an abstract factory for the two types of connections. Regardless of the 
@@ -270,11 +275,6 @@ of the Artistic License, distributed with Perl.
 =head1 SEE ALSO
 
 The XMPCR module, available from http://xmpcr.sf.net
-
-=head1 VERSION
-
-0.1, 12 August 2003
-
 
 
 =cut

@@ -29,6 +29,12 @@ Line 594 should now look like:
 
 There are other changes required, but they won't impact Audio::Xmpcr.
 
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+         ******    Note about Channel Lists    ********
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Any program that uses the serial API will cache the channel list 
+to a disk file to reduce start-up time. If the channel list changes,
+you'll need to delete this file and restart the daemon: ~/.xmpcrd-cache
 
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
  Building
@@ -58,7 +64,7 @@ To start the daemon, just run the command 'xmpcrd'. If you pass the
 '-d' argument, debugging information will be generated. (in particular,
 it just prints the client commands as they are executed.) It takes a
 minute or so to come up when 'power on' is executed, since it has to scan 
-all of the channels.
+all of the channels. 
 
 The daemon recognizes when the web-interface connects, and tries to
 start the darkice program (for audio brodcast to icecast). See

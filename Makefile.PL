@@ -4,7 +4,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
 	AUTHOR => 'Paul Bournival (paulbb@cajun.nu)',
 	NAME	=> 'Audio::Xmpcr',
-	VERSION => 1.1,
+	VERSION => 1.02,
 	EXE_FILES => ['bin/xmpcrd','bin/xmripper','bin/xmfinder'],
 	LIBS	=> [''],   
 	DEFINE	=> '',   

@@ -5,7 +5,7 @@
 
 package Audio::Xmpcr::Serial;
 
-$VERSION="1.01";
+$VERSION="1.02";
 
 use strict;
 use Device::SerialPort;
@@ -41,7 +41,6 @@ sub new {
 sub _doop {
 	my($self,$op,$cmd,$wcnt,$rcnt)=@_;
 	my($readstr,$retval,$cnt)=("",undef,0);
-
 	return("$op: Power isn't on!")
 					if $cmd ne "5AA500050010101001EDED" and ! $self->{_state}{power};
 	$self->{sdev}->write(pack("H*",$cmd));
@@ -68,13 +67,14 @@ sub power {
 		$self->_doop("power on","5AA500050010101001EDED",100,40) :
 		$self->_doop("power off","5AA500020100EDED",0,0);
 
+	$self->{_state}{power}=($status eq "on" ? 1 : 0) if ! $res;
+
 	# if powering up, load the channels from the device.
 	if ($status eq "on" and ! $res) {
 		sleep(8);
 		$self->_buildChannelList;
 		$self->setchannel(1);
 	}
-	$self->{_state}{power}=($status eq "on" ? 1 : 0) if ! $res;
 	$res;
 }
 
@@ -142,16 +142,31 @@ sub _buildChannelList {
   my($self)=@_;
   my($ch,$lasterr,$res)=("00",undef);
 # NOTE: PAULB GET RID OF ME LATER! - for debugging only!!!!!!!!!!!!
-	$self->{_state}{channels}=[1,4,5,6,7,8,9,10,11,12,13,14,15,20,21,22,23,24,25,26,27,28,29,30,31,32,40,41,42,43,44,45,46,47,48,50,51,52,60,61,62,63,64,65,66,67,70,71,72,73,74,75,76,80,81,82,83,90,91,92,93,94,100,101,102,103,104,110,112,113,115,116,121,122,123,124,125,127,129,130,131,132,134,140,141,142,143,144,150,151,152,161,162,163,164,165,166,168,169,170,171];
-return;
+#	$self->{_state}{channels}=[1,4,5,6,7,8,9,10,11,12,13,14,15,20,21,22,23,24,25,26,27,28,29,30,31,32,40,41,42,43,44,45,46,47,48,50,51,52,60,61,62,63,64,65,66,67,70,71,72,73,74,75,76,80,81,82,83,90,91,92,93,94,100,101,102,103,104,110,112,113,115,116,121,122,123,124,125,127,129,130,131,132,134,140,141,142,143,144,150,151,152,161,162,163,164,165,166,168,169,170,171];
+#return;
 	$self->{_state}{channels}=[];
-  while(1) {
- 		($lasterr,$res)=$self->_doop("channel $ch info",
-																	"5AA500042509${ch}00EDED",100,83);
-		$ch=substr($res,14,2);
-		last if $ch eq "00" or $lasterr;
-		push(@{ $self->{_state}{channels} },hex($ch));
+
+  # build a cache file if none is present
+  if (! -f "$ENV{HOME}/.xmpcrd-cache") {
+    open(F,">$ENV{HOME}/.xmpcrd-cache") or die "Can't write cache file: $!";
+	  while(1) {
+	 		($lasterr,$res)=$self->_doop("channel $ch info",
+																		"5AA500042509${ch}00EDED",100,83);
+			$ch=substr($res,14,2);
+			last if $ch eq "00" or $lasterr;
+      print F hex($ch) . "\n";
+	  }
+    close(F);
   }
+
+  my($line);
+  open(F,"$ENV{HOME}/.xmpcrd-cache") or die "Can't read cache file: $!";
+  while($line=<F>) {
+    chop $line;
+		push(@{ $self->{_state}{channels} },$line);
+  }
+  close(F);
+  
 	$lasterr;
 }
 
