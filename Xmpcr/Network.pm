@@ -5,7 +5,7 @@
   
 package Audio::Xmpcr::Network;
 
-$VERSION="1.00";
+$VERSION="1.01";
 
 use strict;
 use IO::Socket::INET;
