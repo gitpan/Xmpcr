@@ -11,7 +11,13 @@ a daemon is provided. Depending on your needs, it may be preferable
 to communicate with the PCR via the daemon. See the pod documentation
 for more information.
 
+This package is a rewrite and extension of Chris Carlson's original work. 
+Much appreciation goes to him for publishing the protocol (which he 
+discovered from someone else).
 
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+ Building
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 To build it, make sure you have Device::SerialPort loaded. 
 Unpack the module, and type :
 
@@ -20,6 +26,18 @@ Unpack the module, and type :
 
 that's it.
 
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+ Starting the daemon (if you elect to use it)
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+An optional daemon is provided. The API is called the same way whether
+or not you're using the daemon. So why would you want to use the daemon?
+
+* A full channel listing can be obtained instantly with the daemon, 
+     but will take ~10-20 seconds without.
+* The daemon will, if you elect, alert you to song changing events.
+     Methods in the API are provided to provide you with a list of 
+     just those channels (and the new song names) that changed.
 
 To start the daemon, just run the command 'xmpcrd'. If you pass the
 '-d' argument, debugging information will be generated. (in particular,
@@ -33,17 +51,36 @@ http://www.icecast.org for more info. If all you want is web-based control
 (and no audio broadcasting), you can disable darkice by editing the
 daemon's source (there's a configuration section at the top).
 
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+ Setting up the web interface (if you elect to use it)
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 Likewise, to use the web interface, copy the web/.cgi file to a convenient
 place in your web directory, and edit the configuration section at the
 top of the .cgi to point to the location of the templates.
 
-Included are two applications:
-	* a stream ripper that builds wav files named appropriately, and
-	* a web interface for controlling the pcr.
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Included applications:
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+* All command-line applications are placed into your perl's $SCRIPTDIR.
+* All applications have a preferences block at the top of the source;
+                            edit it to set local parameters.
 
+
+	xmripper: Rip individual songs from a channel (into wavs) for making mp3's
+            
+	index.cgi: A web interface for controlling the pcr remotely. Offers
+        icecast support, so you can broadcast the audio over the network. 
+        Find this code in the web/ directory of the source Xmpcr package.
+
+	xmfinder: A program that searches channels for songs you want, 
+                                                and records only them.
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+ Pod documentation
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 See the pod documentation in Xmpcr.pm for:
-	* a more detailed description of the module
-  * A copyright notice. 
+	* A more detailed description of the api
+	* A copyright notice. 
 
 	
 Thanks,

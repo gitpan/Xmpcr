@@ -5,7 +5,7 @@
 
 package Audio::Xmpcr::Serial;
 
-$VERSION="0.011";
+$VERSION="0.02";
 
 use strict;
 use Device::SerialPort;
@@ -129,6 +129,7 @@ sub _prune {
 	$str =~ s/[^[:graph:] ]//gs;
 	$str =~ s/^\s+//;
 	$str =~ s/\s+$//;
+	$str =~ s#/#-#g;   # embedded forward slashes - yuk!
 	$str;
 }
 
@@ -180,5 +181,13 @@ sub events {
 sub processEvents {
 	die "Whoops! events aren't supported on the serial interface!\n";
 }
+sub eventFd {
+	die "Whoops! events aren't supported on the serial interface!\n";
+}
+sub forcelock {
+	die "Whoops! locks aren't supported on the serial interface!\n";
+}
+
+
 
 1;

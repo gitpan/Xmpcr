@@ -4,14 +4,18 @@
 <body background=/background.png>
 <center><h2>XM Radio</h2></center>
 
+<table border=0 align=center><tr><td>
+
 <TMPL_IF GENREROW>
 <table align=center border=1 bgcolor=#f2d7ef>
 <tr><th colspan=2>Listen now!<br>
 <a href="<TMPL_VAR NAME=ICEADDR>/xmhi">Higher Quality (for broadband)</a><br>
 <a href="<TMPL_VAR NAME=ICEADDR>/xmlo">Lower Quality (for dialup)</a>
 </th></tr>
-</table><br>
+</table>
 </TMPL_IF>
+
+</td><td>
 
 <table align=center border=1>
 <tr><th bgcolor=#f2d7ef>Power:</th><td bgcolor=#d7f7f5><TMPL_VAR NAME=CURPOWER> (<a href="?cmd=<TMPL_VAR NAME=NEWPOWER>">Turn power <TMPL_VAR NAME=NEWPOWER></a>)</td></tr>
@@ -24,7 +28,9 @@
 <tr><th bgcolor=#f2d7ef>Locked by:</th><td bgcolor=#d7f7f5>
 <TMPL_VAR NAME=LOCKER></td></tr>
 </TMPL_IF>
-</table><br>
+</table>
+
+</td></tr></table> <br>
 
 <TMPL_IF GENREROW>
 <table align=center border=1>

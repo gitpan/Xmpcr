@@ -5,7 +5,7 @@
   
 package Audio::Xmpcr::Network;
 
-$VERSION="0.011";
+$VERSION="0.02";
 
 use strict;
 use IO::Socket::INET;
@@ -52,6 +52,15 @@ sub setchannel {
 	my($self,$chan)=@_;
 	die "Xmpcr::setchannel: incorrect parameters" if ! $chan;
   my @ret=$self->_doop("channel $chan");
+	scalar(@ret)==0 ? undef : $ret[0];
+}
+
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# force the lock
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sub forcelock {
+  my($self)=@_;
+  my @ret=$self->_doop("forcelock");
 	scalar(@ret)==0 ? undef : $ret[0];
 }
 
@@ -128,6 +137,13 @@ sub processEvents {
 		$_=$self->_hashifySongEntry($_);
 	} @events;
 	@events;
+}
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# return the server socket FD for select() calls
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+sub eventFd {
+	my($self)=@_;
+	return fileno($self->{s});
 }
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

@@ -1,6 +1,6 @@
 package Audio::Xmpcr;
 
-$VERSION="0.011";
+$VERSION="0.02";
 
 use strict;
 use Audio::Xmpcr::Serial;
@@ -60,7 +60,8 @@ means that it takes 100/4 or 25 seconds to refresh all channels. When
 retrieving a channel/song listing, a few channels may be out of date, 
 but will most certainly be correct the next pass through. 
 
-The mode is chosen when the device is instantiated. Regardless of the 
+The mode is chosen when the device is instantiated - i.e., the constructor
+is an abstract factory for the two types of connections. Regardless of the 
 mode chosen, the interface supports the same method calls and behaviour 
 with few exceptions. That is, you won't care whether you're talking 
 directly to the device or the daemon - the api will return the same 
@@ -130,9 +131,18 @@ Returns undef if successful, or an error string if call failed.
 
 =item list(integer) (pull single channel list)
 
-Loads channel data. The "single channel" mode returns a single hash;
-the "entire list mode" returns an array of hashes. A channel entry
-has the keys:
+Loads channel data. The "single channel" mode returns a reference
+to a single hash; the "entire list mode" returns an array of hashes. 
+In serial mode (both entire and single list), the data is pulled 
+directly from the device; the full channel listing takes some time. 
+In network mode, a single channel is also pulled directly from the 
+device (since it's fairly quick), but a full channel listing is 
+pulled from a cache. This cache is continually refreshed in the 
+background by the daemon, about every 20 seconds. Therefore, when
+the network/entire list is pulled, there's a chance that a few of the
+song titles will be incorrect, but they will be corrected shortly 
+thereafter. (The currently selected channel is refreshed every
+.5 second, so it will always be accurate).  A channel entry has the keys:
 
 =over 1
 
@@ -158,10 +168,6 @@ Name of artist
 
 =back
 
-Note that pulling the entire channel list in serial mode will take
-up to 20 seconds to execute - the device is not very nimble talking on 
-the USB bus. Using this method in Network mode will produce immediate results.
-	
 returns an empty hash/array if the operation fails.
 
 =item status() 
@@ -226,20 +232,36 @@ Because the daemon broadcasts event changes to all interested parties,
 it is important that you call processEvents() periodically - perhaps 
 every second - to avoid buffer overrun and data loss. (The alternative
 is to provide a separate thread to check the daemon, but not every environment
-is ready to run threads yet.)
+is ready to run threads yet). You may also use the eventFd() call for
+use in select() statements (see eventFd()).
 
 This call is only supported in network mode. An empty list will be
 returned if event deliver (via events()) is disabled.
+
+=item eventFd()
+
+Returns a single file descriptor (*not* a file handle) for use in
+select() calls. Useful when you need to monitor your own file handles
+for input/output, and also need to check for song events. When select
+indicates that the descriptor is ready for I/O, call processEvents to
+determine what was sent. Please do not try to send or receive data using
+the descriptor; let the API do that.
+
+=item forcelock()
+
+If the PCR is locked by a program that has exited and was unable to
+turn off the radio, the daemon may remain locked, and no other programs
+will be able to use the device. This call removes the lock, allowing
+the radio to be turned off via the 'power' call.
 
 =back
 
 =head1 AUTHOR AND COPYRIGHT
 
 This code is modeled after a Perl module written by Chris Carlson
-(c@rlson.net). His module was less ambitious than this one, and he
-was not interested in enhancing it.  Only the low-level protocol 
-communication was derived from his work (which was further derived 
-from another author's Visual Basic project). 
+(c@rlson.net). Only the low-level protocol communication was derived 
+from his work (which was further derived from another author's Visual 
+Basic project). 
 
 Copyright (c) 2003 Paul Bournival.  All rights reserved.  This program is
 free software; you can redistribute it and/or modify it under the terms

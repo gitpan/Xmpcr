@@ -1,5 +1,19 @@
 #!/opt/links/perl -w
 
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# xmpcrd - the XM Radio daemon
+# Pass in a '-d' flag for debugging info.
+#
+# This application is subject to the same copyright as the
+# Audio::Xmpcr module.
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+# Configuration
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+my $start_darkice=1;   # set to 0 to turn off darkice with web-interface
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
 use strict;
 use IO::Socket::INET;
 use Audio::Xmpcr;
@@ -95,7 +109,7 @@ while(1) {
 					$radio->setchannel(1);
 					logmsg("done set channel to 1");
 					logmsg("start darkice");
-					if ($locker and $locker =~ /web/) {
+					if ($locker and $locker =~ /web/ and $start_darkice) {
 						if ($darkice=fork()) {
 							# darkice server goes up
 						} else {
@@ -104,8 +118,13 @@ while(1) {
 						}
 					}
 				logmsg("done powering up");
-				} elsif ($cmd eq "list" and $state eq "on") {
-					for my $k (@channels) {
+				} elsif ($cmd eq "on" or $cmd eq "off") {
+					# trying to turn power on when it's already on, or 
+					# off when it's already off. don't do anything.. it's okay..
+				} elsif ($cmd =~ /^list\s*(\d*)$/ and $state eq "on") {
+					my $ch=$1;
+					refresh($ch) if $ch;
+					for my $k ($ch ? ($channels[$ch]) : @channels) {
 						print $fh "$k->{NUM}\t$k->{NAME}\t$k->{CAT}\t$k->{SONG}\t$k->{ARTIST}\n"  if $k;
 					}
 				} elsif ($cmd =~ /^channel (\d+)$/ and $state eq "on") {
