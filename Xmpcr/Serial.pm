@@ -5,7 +5,7 @@
 
 package Audio::Xmpcr::Serial;
 
-$VERSION="0.01";
+$VERSION="0.011";
 
 use strict;
 use Device::SerialPort;
