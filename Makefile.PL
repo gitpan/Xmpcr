@@ -1,0 +1,11 @@
+use ExtUtils::MakeMaker;
+# See lib/ExtUtils/MakeMaker.pm for details of how to influence
+# the contents of the Makefile that is written.
+WriteMakefile(
+	NAME	=> 'Audio::Xmpcr',
+	VERSION => 0.1,
+	EXE_FILES => ['bin/xmpcrd','bin/xmripper'],
+	LIBS	=> [''],   
+	DEFINE	=> '',   
+	INC	=> '',     
+);

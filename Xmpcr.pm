@@ -1,0 +1,260 @@
+package Audio::Xmpcr;
+
+$VERSION="0.01";
+
+use strict;
+use Audio::Xmpcr::Serial;
+use Audio::Xmpcr::Network;
+
+sub new {
+	my($class,%args)=@_;
+	if ($args{SERIALPORT}) {
+		return new Audio::Xmpcr::Serial($args{SERIALPORT});
+	} elsif ($args{NETHOST}) {
+		return new Audio::Xmpcr::Network($args{NETHOST},$args{NETPORT},
+															$args{LOCKER});
+	} elsif ($args{LOADTEST}) {
+		# just return a blessed hash, for loading/testing purposes
+		my $ref={};
+		bless $ref, $class;
+		return $ref;
+	} else {
+		die "Xmpcr: unknown API mode - must use either NET/SERIAL method.\n";
+	}
+}
+
+=pod
+
+=head1 NAME
+
+Audio::Xmpcr - control an XMPCR device for XM Radio
+
+=head1 SYNOPSIS
+
+	use Audio::Xmpcr;
+
+=head1 DESCRIPTION
+
+The Audio::Xmpcr module allows you to control an XMPCR device,
+which is used to tune into the XM satellite radio network.
+More info can be found at http://www.xmradio.com. The device
+itself can only be purchased (as of this writing) at PCConnection
+http://www.pcconnection.com.
+
+The api operates in one of two modes. First, a direct SERIAL
+mode where the api communicates with the device directly. This is usually
+not desirable because polling the device for song data is time consuming.
+Time required to pull an entire channel/song/artist listing is upwards
+of 10-20 seconds. Also, the device may be shared by several users/programs.
+Protocol confusion may result if everyone is talking at the same time.
+
+The second mode of operation is NETWORK/DAEMON mode. Here, a daemon
+runs on the machine connected to the Pcr, and all communication with the
+daemon is done via sockets. This is preferable for most applications, as
+the daemon takes care of much of the busy work. In particular, the
+daemon continuously polls the device, and updates its internal channel
+listing. The default timing allows 4 channels to be updated each second.
+Also, every half second, the current channel is updated - since we always
+want to know when the channel data changes on the current channel. This
+means that it takes 100/4 or 25 seconds to refresh all channels. When
+retrieving a channel/song listing, a few channels may be out of date, 
+but will most certainly be correct the next pass through. 
+
+The mode is chosen when the device is instantiated. Regardless of the 
+mode chosen, the interface supports the same method calls and behaviour 
+with few exceptions. That is, you won't care whether you're talking 
+directly to the device or the daemon - the api will return the same 
+results either way. The following is a list of exceptions to that rule:
+
+=over 1
+
+=item list()
+
+Via daemon, this call returns almost immediately; via SERIAL, dramatically slower (i.e., a full channel pull will take between 10-20 secs)
+
+=item events() and processEvents()
+
+Channel events are not supported in the SERIAL api.
+
+=back 1
+
+=head1 METHOD CALLS
+
+=over 4
+
+=item new(KEY => VALUE,...)
+
+Creates a new Xmpcr object. Preferably, use the network mode;
+use the serial mode if you're unable to run a daemon.
+
+my $radio=new Xmpcr(SERIALPORT => "/dev/ttyUSB0")
+
+or...
+
+my $radio=new Xmpcr(NETHOST => "localhost",NETPORT => 32463,LOCKER => "appname");
+(port and locker are optional)
+
+Since many users may use the device when the daemon is running, you have
+the option of locking the device to prevent channel changes/power off
+from occuring. When LOCKER is specified, no other networked API user
+may change the channel or power off if their appname is different. For
+example, you have a program with the LOCKER 'ripper', which is busily
+recording show data - you don't want the channel to be changed. Another
+API user whose appname is 'web-interface' may attempt to change the
+channel, but the call will be refused. When the locker powers the 
+device off, it will be freed for use by other applications.
+
+It may take a few tens-of-seconds to power on the device, since a
+channel scan must be performed.  
+
+=item power("on"/"off")
+
+Turns the power to the XmPCR on or off. While off, no commands may
+be executed (other than to turn the power on).
+
+Returns undef if successful, or an error string if call failed.
+
+=item mute("on"/"off")
+
+Turns the mute control on or off. 
+
+Returns undef if successful, or an error string if call failed.
+
+=item setchannel(integer)
+
+Sets the receiver channel.
+
+Returns undef if successful, or an error string if call failed.
+
+=item list() (pull entire channel list)
+
+=item list(integer) (pull single channel list)
+
+Loads channel data. The "single channel" mode returns a single hash;
+the "entire list mode" returns an array of hashes. A channel entry
+has the keys:
+
+=over 1
+
+=item NUM 
+
+Channel number
+
+=item NAME 
+
+Name of channel
+
+=item CAT 
+
+Category of channel
+
+=item SONG 
+
+Title of song
+
+=item ARTIST 
+
+Name of artist
+
+=back
+
+Note that pulling the entire channel list in serial mode will take
+up to 20 seconds to execute - the device is not very nimble talking on 
+the USB bus. Using this method in Network mode will produce immediate results.
+	
+returns an empty hash/array if the operation fails.
+
+=item status() 
+
+Returns status data. Returns a hash with the following keys:
+
+=over 1
+
+=item POWER
+
+on/off
+
+=item ANTENNA
+
+0-100 (percent)
+
+=item NUM
+
+integer (channel num)
+
+=item NAME
+
+string (channel name)
+
+=item CAT
+
+string (channel category)
+
+=item SONG
+
+string (currently playing song)
+
+=item ARTIST
+
+string (currently playing artist)
+
+=item RADIOID
+
+8-character string
+
+=back 1
+
+Hash may have undefined/null values if operation failed - but POWER will
+always be defined.
+
+=item events("on"/"off")
+
+Turns event delivery on or off. Whenever a song changes, the API will
+automatically track channels that change songs, and deliver these
+changes to you. (see the processEvents() call)
+
+This call is only supported in network mode, and always returns success.
+
+=item processEvents()
+
+If event delivery is enabled, you may use this call to see which
+channels have changed songs. It returns an array of hashes, each containing
+data about any channels that have changed. See the list() method for
+a hash key description.
+
+Because the daemon broadcasts event changes to all interested parties,
+it is important that you call processEvents() periodically - perhaps 
+every second - to avoid buffer overrun and data loss. (The alternative
+is to provide a separate thread to check the daemon, but not every environment
+is ready to run threads yet.)
+
+This call is only supported in network mode. An empty list will be
+returned if event deliver (via events()) is disabled.
+
+=back
+
+=head1 AUTHOR AND COPYRIGHT
+
+This code is modeled after a Perl module written by Chris Carlson
+(c@rlson.net). His module was less ambitious than this one, and he
+was not interested in enhancing it.  Only the low-level protocol 
+communication was derived from his work (which was further derived 
+from another author's Visual Basic project). 
+
+Copyright (c) 2003 Paul Bournival.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the terms
+of the Artistic License, distributed with Perl.
+
+=head1 SEE ALSO
+
+The XMPCR module, available from http://xmpcr.sf.net
+
+=head1 VERSION
+
+0.1, 12 August 2003
+
+
+
+=cut
+
+1;

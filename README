@@ -1,0 +1,52 @@
+
+This is a description of the Audio::Xmpcr module.
+
+It provides access to control the XM Satellite Radio 'PCR' device.
+The PCR is a small, user-interface-less box that tunes into XM Satellite
+Radio.  Control is performed via a USB port, and (on linux) the usb-serial
+module. Serial support in perl is provided by Device::SerialPort.
+
+For technical reasons, and because the box is a shared hardware resource,
+a daemon is provided. Depending on your needs, it may be preferable
+to communicate with the PCR via the daemon. See the pod documentation
+for more information.
+
+
+To build it, make sure you have Device::SerialPort loaded. 
+Unpack the module, and type :
+
+	perl Makefile.PL
+	make install
+
+that's it.
+
+
+To start the daemon, just run the command 'xmpcrd'. If you pass the
+'-d' argument, debugging information will be generated. (in particular,
+it just prints the client commands as they are executed.) It takes a
+minute or so to come up when 'power on' is executed, since it has to scan 
+all of the channels.
+
+The daemon recognizes when the web-interface connects, and tries to
+start the darkice program (for audio brodcast to icecast). See
+http://www.icecast.org for more info. If all you want is web-based control
+(and no audio broadcasting), you can disable darkice by editing the
+daemon's source (there's a configuration section at the top).
+
+Likewise, to use the web interface, copy the web/.cgi file to a convenient
+place in your web directory, and edit the configuration section at the
+top of the .cgi to point to the location of the templates.
+
+Included are two applications:
+	* a stream ripper that builds wav files named appropriately, and
+	* a web interface for controlling the pcr.
+
+See the pod documentation in Xmpcr.pm for:
+	* a more detailed description of the module
+  * A copyright notice. 
+
+	
+Thanks,
+
+Paul Bournival
+paulb@cajun.nu     13 Aug 03

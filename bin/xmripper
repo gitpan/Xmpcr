@@ -1,0 +1,80 @@
+#!/opt/links/perl -w
+
+use strict;
+use bytes;
+use Audio::DSP;
+use Audio::Wav;
+use Audio::Xmpcr;
+die "usage: $0 station duration(mins)\n" if scalar(@ARGV)!=2;
+my($station,$duration)=@ARGV;
+select(STDOUT); $|=1;
+
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+#                                configuration
+my $spooldir="/burn/audio/xmdone";
+my $nethost="localhost";
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+my $tempdir=$spooldir;
+$spooldir .= "/$station";
+die "spooldir doesn't exist!" if ! -d $tempdir;
+chdir($tempdir);
+mkdir($spooldir) if ! -d $spooldir; 
+my $termtime=time+$duration*60;
+
+my $radio=new Audio::Xmpcr(NETHOST => $nethost,LOCKER => "ripper");
+
+print "Turning down local audio...\n"; 
+$radio->power(STATUS => "on") and die "can't turn power on";
+$radio->events(STATUS => "on");
+print "Changing channel\n"; $radio->setchannel(CHANNEL => $station);
+print "Ready to record... waiting for next song/title to begin... \n";
+opendir(D,$tempdir);
+map {
+	unlink("$tempdir/$_") if /wav$/ and -f "$tempdir/$_";
+} readdir(D);
+closedir(D);
+
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+#                            main loop
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+my($cursong,$curfn)=("","");
+my($pid,$rout)=(undef);
+while(time<$termtime) {
+	for my $ch ($radio->processEvents()) {
+		next unless $ch->{NUM}==$station;
+		my $newsong=($ch->{ARTIST}||"none") . "_-_" . ($ch->{SONG}||"none");
+		print "> Song change: $newsong\n";
+		if ($pid) {
+			print "Stopping recorder... ";
+			kill(15,$pid);
+			waitpid($pid,0);
+			print "stopped\n";
+			opendir(D,$tempdir);
+			map {
+				rename("$tempdir/$_","$spooldir/$_") if /wav$/;
+			} readdir(D);
+			closedir(D);
+		}
+		$cursong=$newsong;
+		$curfn=$cursong;
+		$curfn =~ s/[\n\r]//gs;
+		$curfn =~ s/ /_/g;
+		$curfn =~ s/[^\w\-]/_/g;
+		1 while $curfn =~ s/__/_/g;
+		$curfn =~ s/^_//;
+		if (! ($pid=fork())) {
+			exec("record","-c","-o",$curfn);
+			die "Oops! Failed to start record! Why?\n";
+		}
+		print "Recording to $curfn on pid $pid\n";
+	} $radio->processEvents();
+	select(undef,undef,undef,1);
+}
+
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+#                            wrap up
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+kill(15,$pid);
+$radio->power(STATUS => "off");
+print "Recording complete\n";
